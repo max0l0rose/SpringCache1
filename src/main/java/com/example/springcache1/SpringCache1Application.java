@@ -1,5 +1,6 @@
 package com.example.springcache1;
 
+import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -71,7 +72,20 @@ public class SpringCache1Application {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringCache1Application.class, args);
 	}
+
+
+//	@Bean
+//	public TomcatEmbeddedServletContainerFactory tomcatFactory() {
+//		TomcatEmbeddedServletContainerFactory tomcatFactory = new TomcatEmbeddedServletContainerFactory();
+//		tomcatFactory.addContextCustomizers((context) -> {
+//			StandardRoot standardRoot = new StandardRoot(context);
+//			standardRoot.setCacheMaxSize(40 * 1024);
+//		});
+//		return tomcatFactory;
+//	}
+
 }
+
 
 @NamedNativeQuery( name = "qqq", query = "SELECT 1")
 @Component
@@ -96,3 +110,15 @@ class A {
 //		cacheManager.setCacheNames(Arrays.asList("f"));
 //	}
 //}
+
+
+//@EnableWebMvc
+//public class MvcConfig implements WebMvcConfigurer {
+//	@Override
+//	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//		registry.addResourceHandler("/js/**")
+//				.addResourceLocations("/js/")
+//				.setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS));
+//	}
+//}
+
