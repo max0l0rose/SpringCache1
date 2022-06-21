@@ -1,31 +1,25 @@
 package com.example.springcache1;
 
-import org.apache.catalina.webresources.StandardRoot;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.cache.CacheManagerCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
+import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @Controller
@@ -33,6 +27,7 @@ import java.util.Arrays;
 //@SessionScope
 //@RequestMapping("/")
 @EnableCaching
+@ServletComponentScan
 public class SpringCache1Application {
 
 //	@Bean
@@ -46,24 +41,49 @@ public class SpringCache1Application {
 //	@Autowired
 //	CacheManager cacheManager;
 
-	@Autowired
-	A a;
+	// ETAG!
+//	@Bean
+//	public ShallowEtagHeaderFilter shallowEtagHeaderFilter() {
+//		return new ShallowEtagHeaderFilter();
+//	}
+
+
+//	@Autowired
+//	A a;
 
 	int c = 0;
 
 	@GetMapping()
 	@ResponseBody
-	//@Cacheable(value = "f", unless="#result.length()>10")
+	@Cacheable(value = "f", unless="#result.length()>10")
 //	@CacheEvict
 	public String f(@RequestParam int f) throws InterruptedException {
 
-		String s = a.fff();
+		//String s = a.fff();
 
-//		Thread.sleep(2000);
-		return "C=" + s + " " + ++c + "; f=" + f;
+		Thread.sleep(2000);
+		return "C=" //+ s + " "
+				       + ++c + "; f=" + f;
 	}
 
-//	@Cacheable(value="books", key="#isbn.rawNumber")
+
+	@GetMapping("/qqq")
+	public ResponseEntity<String> qqq() throws InterruptedException {
+		Thread.sleep(2000);
+		return ResponseEntity.ok()
+				//.cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS))
+				.body("<a href='http://localhost:8080/qqq2'>qqqqqq2</a>");
+	}
+
+	@GetMapping("/qqq2")
+	public ResponseEntity<String> qqq2() throws InterruptedException {
+		Thread.sleep(2000);
+		return ResponseEntity.ok()
+				//.cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS))
+				.body("<a href='http://localhost:8080/qqq'>qqqqqq</a>");
+	}
+
+	//	@Cacheable(value="books", key="#isbn.rawNumber")
 //	public Book findStoryBook (ISBN isbn, boolean checkWarehouse, boolean includeUsed)
 //
 //	@Cacheable(value="books", key="T(classType).hash(#isbn)")
@@ -72,6 +92,29 @@ public class SpringCache1Application {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringCache1Application.class, args);
 	}
+
+//	@EnableWebSecurity
+//	public class AppSecurityConfig extends
+//			WebSecurityConfigurerAdapter {
+//
+//		@Override
+//		protected void configure(HttpSecurity http) {
+//			http
+//					.headers(headers -> headers
+//							.cacheControl(cache -> cache.disable())
+//					);
+//		}
+//	}
+
+//	@Configuration
+//	@EnableWebMvcSecurity
+//	public class SecurityConfig extends WebSecurityConfigurerAdapter {
+//		@Override
+//		protected void configure(HttpSecurity http) throws Exception {
+//			// Prevent the HTTP response header of "Pragma: no-cache".
+//			http.headers().cacheControl().disable();
+//		}
+//	}
 
 
 //	@Bean
@@ -87,20 +130,41 @@ public class SpringCache1Application {
 }
 
 
-@NamedNativeQuery( name = "qqq", query = "SELECT 1")
-@Component
-class A {
+@WebFilter("/*")
+class AddResponseHeaderFilter implements Filter {
 
-	@Cacheable(value = "f")
-	public String fff() throws InterruptedException
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+																throws IOException, ServletException
 	{
-		Thread.sleep(2000);
-		return "aaaaaaaaaa";
+		HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+		httpServletResponse.setHeader("Cache-Control", "max-age=60");
+		chain.doFilter(request, response);
 	}
 
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+	}
+
+	@Override
+	public void destroy() {
+	}
 }
 
-//class Q implements CacheCo
+
+//@NamedNativeQuery( name = "qqq", query = "SELECT 1")
+//@Component
+//class A {
+//
+//	@Cacheable(value = "f")
+//	public String fff() throws InterruptedException
+//	{
+//		Thread.sleep(2000);
+//		return "aaaaaaaaaa";
+//	}
+//
+//}
+
 
 //@Component
 //class SimpleCacheCustomizer implements CacheManagerCustomizer<ConcurrentMapCacheManager> {
